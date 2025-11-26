@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  User, Users, PlusSquare, ArrowLeft, Copy, 
+  User, Users, PlusSquare, ArrowLeft, Copy, Check,
   Send, RotateCcw, Home, Eye, X, Crown, AlertTriangle
 } from 'lucide-react';
 import { 
@@ -24,6 +24,7 @@ export default function App() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [spectatingId, setSpectatingId] = useState<string | null>(null);
   const [showPlayerList, setShowPlayerList] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Form Inputs
   const [inputCode, setInputCode] = useState('');
@@ -160,18 +161,16 @@ export default function App() {
     setPlayers([]);
   };
 
+  const copyRoomId = () => {
+    if (room) {
+      navigator.clipboard.writeText(room.id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   // --- Derived State for Multiplayer ---
   
-  const sortedPlayers = [...players]; // Already sorted by joined_at from DB query usually, but Supabase Realtime keeps order reasonably well.
-  // Logic to determine turn: Total guesses across all players?
-  // Actually, turn is circular. Player 0 -> Player 1 -> ...
-  // However, players join at different times. 
-  // Let's assume turn is based on: (Total Guesses Made by Everyone) % PlayerCount
-  // But if players miss turns or drop, this is tricky.
-  // Robust simple way: Find player with fewest guesses. If tie, determine by index in list.
-  
-  // Alternative robust turn logic:
-  // Turn index = (SUM of all guesses count) % players.length
   const totalGuessesInRoom = players.reduce((acc, p) => acc + (p.guesses?.length || 0), 0);
   const currentTurnIndex = players.length > 0 ? totalGuessesInRoom % players.length : 0;
   const currentTurnPlayer = players[currentTurnIndex];
@@ -469,8 +468,8 @@ export default function App() {
                   </span>
                   <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full mt-1 border border-lavender-200">
                     <span className="font-mono font-bold text-lavender-800">{room.id}</span>
-                    <button onClick={() => navigator.clipboard.writeText(room.id)} className="text-lavender-500 hover:text-lavender-700">
-                      <Copy size={12} />
+                    <button onClick={copyRoomId} className="text-lavender-500 hover:text-lavender-700">
+                      {copied ? <Check size={12} className="text-green-500"/> : <Copy size={12} />}
                     </button>
                   </div>
                </div>
