@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lavender Logic</title>
+    
+    <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -11,22 +13,10 @@
           extend: {
             colors: {
               lavender: {
-                50: '#f5f3ff',
-                100: '#ede9fe',
-                200: '#ddd6fe',
-                300: '#c4b5fd',
-                400: '#a78bfa',
-                500: '#8b5cf6',
-                600: '#7c3aed',
-                700: '#6d28d9',
-                800: '#5b21b6',
-                900: '#4c1d95',
+                50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd',
+                400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
+                800: '#5b21b6', 900: '#4c1d95',
               },
-              clay: {
-                light: '#fdfdff',
-                base: '#ede9fe',
-                shadow: '#dcd6fa',
-              }
             },
             boxShadow: {
               'clay-card': '8px 8px 16px #dcd6fa, -8px -8px 16px #ffffff',
@@ -39,38 +29,478 @@
       }
     </script>
     <style>
-      body {
-        background-color: #ede9fe; /* lavender-100 */
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        -webkit-tap-highlight-color: transparent;
-      }
-      /* Custom Scrollbar for tables */
-      .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-      }
-      .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-      }
+      body { background-color: #ede9fe; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+
+    <!-- 2. React & DOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- 3. Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 4. Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="importmap">
 {
   "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.86.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.86.0",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "vite": "https://aistudiocdn.com/vite@^7.2.4"
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
-  <body>
+<body>
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-  <script type="module" src="/index.tsx"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // --- ICONS (SVG Components) ---
+        const Icon = ({ path, size = 24, className = "" }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            {path}
+          </svg>
+        );
+        const Icons = {
+          User: (props) => <Icon {...props} path={<><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>} />,
+          Users: (props) => <Icon {...props} path={<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />,
+          PlusSquare: (props) => <Icon {...props} path={<><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></>} />,
+          ArrowLeft: (props) => <Icon {...props} path={<><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></>} />,
+          Copy: (props) => <Icon {...props} path={<><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></>} />,
+          Check: (props) => <Icon {...props} path={<polyline points="20 6 9 17 4 12"/>} />,
+          Send: (props) => <Icon {...props} path={<><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></>} />,
+          RotateCcw: (props) => <Icon {...props} path={<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/>} />,
+          Home: (props) => <Icon {...props} path={<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />,
+          Eye: (props) => <Icon {...props} path={<><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></>} />,
+          X: (props) => <Icon {...props} path={<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>} />,
+          Crown: (props) => <Icon {...props} path={<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>} />,
+          AlertTriangle: (props) => <Icon {...props} path={<><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>} />,
+        };
+
+        // --- CONSTANTS ---
+        const INDIAN_MYTHOLOGY_NAMES = [
+          "Garuda Wings", "Nandi Strength", "Airavata Trunk", "Shesha Coil", "Indra Thunder",
+          "Agni Flame", "Varuna Tide", "Vayu Breeze", "Surya Ray", "Chandra Glow"
+        ];
+        const AVATAR_STYLES = [
+          "bg-gradient-to-br from-red-300 to-red-500", "bg-gradient-to-br from-blue-300 to-blue-500",
+          "bg-gradient-to-br from-green-300 to-green-500", "bg-gradient-to-br from-yellow-300 to-yellow-500",
+          "bg-gradient-to-br from-purple-300 to-purple-500", "bg-gradient-to-br from-pink-300 to-pink-500",
+          "bg-gradient-to-br from-indigo-300 to-indigo-500", "bg-gradient-to-br from-teal-300 to-teal-500",
+        ];
+        
+        // --- SUPABASE SETUP ---
+        const SUPABASE_URL = "https://xvpvsaovshendeszifnq.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cHZzYW92c2hlbmRlc3ppZm5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNzgzMTcsImV4cCI6MjA3OTc1NDMxN30.Y8TtfIB_6jmWfmE1agcKyQFjkFlBl10JTzTTHMiSqnQ";
+        
+        let supabase = null;
+        if (window.supabase) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+
+        // --- GAME LOGIC HELPER FUNCTIONS ---
+        const generateSecretCode = () => {
+          const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+          let code = '';
+          for (let i = 0; i < 4; i++) {
+            const randomIndex = Math.floor(Math.random() * digits.length);
+            code += digits[randomIndex];
+            digits.splice(randomIndex, 1);
+          }
+          return code;
+        };
+
+        const calculateGuess = (input, secret, rowNum) => {
+          let position = 0;
+          const inputArr = input.split('');
+          const secretArr = secret.split('');
+
+          for (let i = 0; i < 4; i++) {
+            if (inputArr[i] === secretArr[i]) position++;
+          }
+
+          const inputSet = new Set(inputArr);
+          const secretSet = new Set(secretArr);
+          const intersection = new Set([...inputSet].filter(x => secretSet.has(x)));
+          const count = intersection.size;
+
+          return { row: rowNum, input, count, position };
+        };
+
+        const validateInput = (input) => {
+          if (input.length !== 4) return "Number must be 4 digits.";
+          if (!/^[1-9]+$/.test(input)) return "Digits must be 1-9 (no zeroes).";
+          const uniqueChars = new Set(input.split(''));
+          if (uniqueChars.size !== 4) return "Digits cannot be repeated.";
+          return null;
+        };
+
+        // --- MAIN APP COMPONENT ---
+        function App() {
+          const [mode, setMode] = useState('home'); // home, single, create, join, multiplayer
+          const [error, setError] = useState(null);
+
+          // Single Player
+          const [singleSecret, setSingleSecret] = useState('');
+          const [singleGuesses, setSingleGuesses] = useState([]);
+          const [singleWon, setSingleWon] = useState(false);
+
+          // Multiplayer
+          const [room, setRoom] = useState(null);
+          const [me, setMe] = useState(null);
+          const [players, setPlayers] = useState([]);
+          const [spectatingId, setSpectatingId] = useState(null);
+          const [showPlayerList, setShowPlayerList] = useState(false);
+          const [copied, setCopied] = useState(false);
+
+          // Forms
+          const [inputCode, setInputCode] = useState('');
+          const [userName, setUserName] = useState('');
+          const [roomCodeInput, setRoomCodeInput] = useState('');
+
+          // --- Supabase Realtime ---
+          useEffect(() => {
+            if (mode !== 'multiplayer' || !room || !supabase) return;
+
+            // Load initial players
+            supabase
+              .from('players')
+              .select('*')
+              .eq('room_id', room.id)
+              .order('joined_at', { ascending: true })
+              .then(({ data }) => { if (data) setPlayers(data); });
+
+            // Subscribe
+            const channel = supabase.channel(`room:${room.id}`)
+              .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `room_id=eq.${room.id}` }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                   setPlayers(prev => [...prev, payload.new].sort((a,b) => new Date(a.joined_at) - new Date(b.joined_at)));
+                } else if (payload.eventType === 'UPDATE') {
+                   setPlayers(prev => prev.map(p => p.id === payload.new.id ? payload.new : p));
+                   if (payload.new.id === me?.id) setMe(payload.new);
+                } else if (payload.eventType === 'DELETE') {
+                   setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
+                }
+              })
+              .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${room.id}` }, (payload) => {
+                setRoom(payload.new);
+              })
+              .subscribe();
+
+            return () => { supabase.removeChannel(channel); };
+          }, [mode, room?.id]);
+
+          // --- Actions ---
+          const startSingle = () => {
+            setSingleSecret(generateSecretCode());
+            setSingleGuesses([]);
+            setSingleWon(false);
+            setInputCode('');
+            setMode('single');
+          };
+
+          const createRoom = async () => {
+             if (!userName.trim()) return setError("Please enter your name");
+             setError(null);
+             try {
+                const roomId = Math.floor(100000 + Math.random() * 900000).toString();
+                const roomName = INDIAN_MYTHOLOGY_NAMES[Math.floor(Math.random() * INDIAN_MYTHOLOGY_NAMES.length)];
+                const secret = generateSecretCode();
+                
+                const { data: rData, error: rErr } = await supabase.from('rooms').insert([{ id: roomId, name: roomName, secret_code: secret }]).select().single();
+                if(rErr) throw rErr;
+                
+                const { data: pData, error: pErr } = await supabase.from('players').insert([{
+                   room_id: roomId, name: userName, avatar_idx: Math.floor(Math.random()*8)
+                }]).select().single();
+                if(pErr) throw pErr;
+
+                setRoom(rData);
+                setMe(pData);
+                setMode('multiplayer');
+             } catch(e) {
+                console.error(e);
+                setError("Failed to create room. Supabase might be down.");
+             }
+          };
+
+          const joinRoom = async () => {
+             if (!userName.trim()) return setError("Please enter your name");
+             if (roomCodeInput.length !== 6) return setError("Invalid Room ID");
+             setError(null);
+             try {
+               const { data: rData, error: rErr } = await supabase.from('rooms').select().eq('id', roomCodeInput).single();
+               if (rErr || !rData) throw new Error("Room not found");
+
+               const { data: pData, error: pErr } = await supabase.from('players').insert([{
+                   room_id: roomCodeInput, name: userName, avatar_idx: Math.floor(Math.random()*8)
+                }]).select().single();
+               if(pErr) throw pErr;
+
+               setRoom(rData);
+               setMe(pData);
+               setMode('multiplayer');
+             } catch(e) {
+               setError("Could not join room. Check ID.");
+             }
+          };
+
+          const submitGuess = async () => {
+             const valErr = validateInput(inputCode);
+             if (valErr) return setError(valErr);
+             setError(null);
+
+             if (mode === 'single') {
+                const res = calculateGuess(inputCode, singleSecret, singleGuesses.length + 1);
+                setSingleGuesses([...singleGuesses, res]);
+                if (res.count === 4 && res.position === 4) setSingleWon(true);
+                setInputCode('');
+             } else if (mode === 'multiplayer' && room && me) {
+                const totalGuesses = players.reduce((acc, p) => acc + (p.guesses?.length || 0), 0);
+                const turnIdx = totalGuesses % players.length;
+                if (players[turnIdx]?.id !== me.id) return setError("Not your turn!");
+
+                const res = calculateGuess(inputCode, room.secret_code, (me.guesses?.length || 0) + 1);
+                const isWin = res.count === 4 && res.position === 4;
+                
+                // Optimistic
+                const newMe = { ...me, guesses: [...(me.guesses || []), res] };
+                setMe(newMe);
+                setPlayers(prev => prev.map(p => p.id === me.id ? newMe : p));
+                setInputCode('');
+
+                await supabase.from('players').update({ guesses: newMe.guesses }).eq('id', me.id);
+                if (isWin) await supabase.from('rooms').update({ winner_id: me.id }).eq('id', room.id);
+             }
+          };
+
+          const leaveRoom = async () => {
+             if (me) await supabase.from('players').delete().eq('id', me.id);
+             setMode('home'); setRoom(null); setMe(null); setPlayers([]);
+          };
+
+          // --- Helpers ---
+          const copyId = () => {
+             if(room) { navigator.clipboard.writeText(room.id); setCopied(true); setTimeout(()=>setCopied(false), 2000); }
+          };
+
+          const totalGuesses = players.reduce((acc, p) => acc + (p.guesses?.length || 0), 0);
+          const currentTurnPlayer = players[totalGuesses % players.length];
+          const isMyTurn = mode === 'multiplayer' && !room?.winner_id && currentTurnPlayer?.id === me?.id;
+          const winner = room?.winner_id ? players.find(p => p.id === room.winner_id) : null;
+          const displayPlayer = (mode === 'multiplayer' && spectatingId) 
+             ? players.find(p => p.id === spectatingId) 
+             : (mode === 'multiplayer' ? me : null);
+          const guessesToShow = mode === 'single' ? singleGuesses : (displayPlayer?.guesses || []);
+
+          // --- COMPONENTS ---
+          const Keypad = () => (
+             <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto mt-6">
+                {[1,2,3,4,5,6,7,8,9].map(num => (
+                   <button key={num}
+                      onClick={() => { if(inputCode.length < 4 && !inputCode.includes(num)) { setInputCode(prev=>prev+num); setError(null); }}}
+                      disabled={inputCode.includes(num.toString()) || inputCode.length >= 4 || !!winner || singleWon}
+                      className="aspect-square rounded-2xl bg-white shadow-clay-btn active:shadow-clay-btn-active active:scale-95 transition-all text-xl font-bold text-lavender-800 disabled:opacity-50 disabled:shadow-none"
+                   >{num}</button>
+                ))}
+                <button onClick={()=>setInputCode(prev=>prev.slice(0,-1))} className="aspect-square flex items-center justify-center rounded-2xl bg-red-50 text-red-500 shadow-clay-btn active:shadow-clay-btn-active active:scale-95"><Icons.RotateCcw size={24}/></button>
+                <div className="flex items-center justify-center text-2xl font-mono tracking-widest text-lavender-900">{inputCode.padEnd(4, '_')}</div>
+                <button onClick={submitGuess} disabled={inputCode.length !== 4 || !!winner || singleWon} className={`aspect-square flex items-center justify-center rounded-2xl shadow-clay-btn transition-all ${inputCode.length === 4 ? 'bg-lavender-600 text-white active:shadow-clay-btn-active active:scale-95' : 'bg-gray-100 text-gray-400'}`}><Icons.Send size={24}/></button>
+             </div>
+          );
+
+          const History = ({ list }) => (
+             <div className="flex-1 overflow-y-auto w-full max-w-md mx-auto px-4 mt-4 mb-4 scrollbar-hide">
+                <div className="sticky top-0 bg-lavender-100 z-10 pb-2 grid grid-cols-4 gap-2 text-xs uppercase tracking-wider text-lavender-500 font-semibold text-center mb-2">
+                   <div>#</div><div>Input</div><div>Count</div><div>Pos</div>
+                </div>
+                <div className="space-y-2 pb-20">
+                   {list.map((g, i) => (
+                      <div key={i} className="grid grid-cols-4 gap-2 bg-white rounded-xl p-3 shadow-sm items-center text-center animate-[fadeIn_0.3s_ease-out]">
+                         <div className="text-gray-400 font-mono text-sm">{g.row}</div>
+                         <div className="font-mono text-lg font-bold text-lavender-900 tracking-widest">{g.input}</div>
+                         <div className="flex justify-center"><span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">{g.count}</span></div>
+                         <div className="flex justify-center"><span className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-sm">{g.position}</span></div>
+                      </div>
+                   ))}
+                   {list.length === 0 && <div className="text-center text-lavender-400 mt-10 italic">Start guessing...</div>}
+                </div>
+             </div>
+          );
+
+          // --- VIEWS ---
+
+          if (mode === 'home') {
+            return (
+               <div className="min-h-screen flex flex-col items-center justify-center p-6 space-y-8 bg-lavender-100">
+                  <div className="text-center space-y-2">
+                     <div className="inline-block p-4 rounded-3xl bg-lavender-200 shadow-clay-card mb-4"><span className="text-4xl">🔮</span></div>
+                     <h1 className="text-4xl font-black text-lavender-900">Lavender Logic</h1>
+                     <p className="text-lavender-600">Master the digits.</p>
+                  </div>
+                  <div className="w-full max-w-xs space-y-6">
+                     <button onClick={startSingle} className="w-full bg-white p-6 rounded-3xl shadow-clay-card active:scale-95 transition-transform flex items-center space-x-4 group">
+                        <div className="p-3 bg-lavender-50 rounded-2xl text-lavender-600"><Icons.User size={32}/></div>
+                        <div className="text-left"><h3 className="text-xl font-bold text-gray-800">Single Player</h3><p className="text-sm text-gray-500">Practice solo</p></div>
+                     </button>
+                     <button onClick={()=>{setMode('create'); setUserName('');}} className="w-full bg-white p-6 rounded-3xl shadow-clay-card active:scale-95 transition-transform flex items-center space-x-4 group">
+                        <div className="p-3 bg-lavender-50 rounded-2xl text-lavender-600"><Icons.PlusSquare size={32}/></div>
+                        <div className="text-left"><h3 className="text-xl font-bold text-gray-800">Create Room</h3><p className="text-sm text-gray-500">Host for friends</p></div>
+                     </button>
+                     <button onClick={()=>{setMode('join'); setUserName(''); setRoomCodeInput('');}} className="w-full bg-white p-6 rounded-3xl shadow-clay-card active:scale-95 transition-transform flex items-center space-x-4 group">
+                        <div className="p-3 bg-lavender-50 rounded-2xl text-lavender-600"><Icons.Users size={32}/></div>
+                        <div className="text-left"><h3 className="text-xl font-bold text-gray-800">Join Room</h3><p className="text-sm text-gray-500">Enter room ID</p></div>
+                     </button>
+                  </div>
+               </div>
+            );
+          }
+
+          if (mode === 'create' || mode === 'join') {
+             return (
+               <div className="min-h-screen flex flex-col p-6 bg-lavender-100">
+                  <button onClick={()=>setMode('home')} className="self-start p-2 text-lavender-700 mb-8"><Icons.ArrowLeft/></button>
+                  <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full space-y-6">
+                     <h2 className="text-2xl font-bold text-lavender-900">{mode === 'create' ? 'Create Room' : 'Join Room'}</h2>
+                     <div className="w-full bg-white p-6 rounded-3xl shadow-clay-card space-y-4">
+                        {mode === 'join' && (
+                           <div>
+                              <label className="block text-sm font-semibold text-gray-600 mb-1">Room ID</label>
+                              <input value={roomCodeInput} onChange={e=>setRoomCodeInput(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder="6-digit code" className="w-full p-4 bg-lavender-50 rounded-xl outline-none focus:ring-2 focus:ring-lavender-400 text-lavender-900 font-mono tracking-widest text-center text-lg"/>
+                           </div>
+                        )}
+                        <div>
+                           <label className="block text-sm font-semibold text-gray-600 mb-1">Your Name</label>
+                           <input value={userName} onChange={e=>setUserName(e.target.value.slice(0,20))} placeholder="Enter display name" className="w-full p-4 bg-lavender-50 rounded-xl outline-none focus:ring-2 focus:ring-lavender-400 text-lavender-900"/>
+                        </div>
+                        <div className="pt-2">
+                           <button onClick={mode === 'create' ? createRoom : joinRoom} className="w-full py-4 rounded-xl bg-lavender-600 text-white font-bold shadow-lg shadow-lavender-300 active:scale-95 transition-all">
+                              {mode === 'create' ? 'Create & Enter' : 'Enter Room'}
+                           </button>
+                        </div>
+                     </div>
+                     {error && <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm flex items-center gap-2"><Icons.AlertTriangle size={16}/> {error}</div>}
+                  </div>
+               </div>
+             );
+          }
+
+          // Game Interface (Single or Multiplayer)
+          return (
+             <div className="min-h-screen flex flex-col bg-lavender-100 overflow-hidden relative">
+                <div className="p-4 flex items-center justify-between z-20 relative">
+                   <button onClick={mode === 'single' ? ()=>setMode('home') : leaveRoom} className="p-2 bg-white rounded-full shadow-sm text-lavender-800"><Icons.Home size={20}/></button>
+                   
+                   <div className="text-center">
+                     {mode === 'single' ? <h2 className="font-bold text-lavender-900">Single Player</h2> : (
+                        spectatingId ? (
+                           <div className="flex flex-col items-center">
+                              <span className="text-xs font-bold text-lavender-400 uppercase">Watching</span>
+                              <span className="font-bold text-lavender-900">{displayPlayer?.name}</span>
+                           </div>
+                        ) : (
+                           <div className="flex flex-col items-center">
+                              <span className="text-xs font-bold text-lavender-400 uppercase">{room.name}</span>
+                              <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-full mt-1 border border-lavender-200">
+                                 <span className="font-mono font-bold text-lavender-800">{room.id}</span>
+                                 <button onClick={copyId} className="text-lavender-500">{copied ? <Icons.Check size={12} className="text-green-500"/> : <Icons.Copy size={12}/>}</button>
+                              </div>
+                           </div>
+                        )
+                     )}
+                   </div>
+
+                   {mode === 'multiplayer' ? (
+                      <button onClick={()=>setShowPlayerList(true)} className="relative p-2 bg-white rounded-full shadow-sm text-lavender-800">
+                         <Icons.Users size={20}/>
+                         <span className="absolute -top-1 -right-1 w-5 h-5 bg-lavender-600 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-lavender-100">{players.length}</span>
+                      </button>
+                   ) : <div className="w-10"></div>}
+                </div>
+
+                {mode === 'multiplayer' && !spectatingId && !winner && (
+                   <div className="bg-lavender-200 py-2 text-center text-sm font-medium text-lavender-800">
+                      {isMyTurn ? <span className="flex items-center justify-center gap-2 animate-pulse">It's your turn! <span className="w-2 h-2 rounded-full bg-green-500"></span></span> : <span className="opacity-70">Waiting for {currentTurnPlayer?.name}...</span>}
+                   </div>
+                )}
+
+                {(winner || singleWon) && (
+                   <div className="bg-yellow-100 p-4 m-4 rounded-2xl flex flex-col items-center justify-center shadow-sm text-center border-2 border-yellow-200 animate-bounce">
+                      <Icons.Crown className="text-yellow-600 mb-2" size={32} />
+                      <h3 className="font-bold text-yellow-800 text-lg">{mode === 'single' ? 'Code Cracked!' : `${winner.name} won!`}</h3>
+                      {mode === 'multiplayer' && <p className="text-yellow-700 text-sm">Code: <span className="font-mono font-bold">{room.secret_code}</span></p>}
+                   </div>
+                )}
+
+                {error && <div className="mx-4 p-3 bg-red-100 text-red-600 rounded-lg text-sm text-center mb-2 animate-pulse">{error}</div>}
+
+                <History list={guessesToShow} />
+
+                {(!spectatingId && !winner && !singleWon) && (
+                   <div className={`bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)] p-6 pb-10 transition-all ${mode === 'multiplayer' && !isMyTurn ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
+                      <Keypad />
+                   </div>
+                )}
+                
+                {(singleWon || winner) && (
+                   <div className="bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)] p-6 pb-10">
+                     {mode === 'single' ? (
+                        <button onClick={startSingle} className="w-full py-4 bg-lavender-600 text-white rounded-2xl font-bold shadow-lg shadow-lavender-300 active:scale-95 transition-transform">Play Again</button>
+                     ) : (
+                        <div className="text-center text-gray-500 text-sm">Host can restart (Feature coming soon)</div>
+                     )}
+                   </div>
+                )}
+
+                {spectatingId && (
+                   <div className="absolute bottom-10 left-0 right-0 flex justify-center z-20">
+                      <button onClick={()=>setSpectatingId(null)} className="bg-lavender-800 text-white px-6 py-3 rounded-full shadow-lg font-bold flex items-center gap-2 active:scale-95 transition-transform"><Icons.ArrowLeft size={16}/> Back to Game</button>
+                   </div>
+                )}
+
+                {showPlayerList && (
+                   <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex justify-end">
+                      <div className="bg-white w-3/4 max-w-sm h-full shadow-2xl p-6 flex flex-col animate-[slideInRight_0.3s_ease-out]">
+                         <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-lavender-900">Players</h3>
+                            <button onClick={()=>setShowPlayerList(false)} className="p-2 bg-gray-100 rounded-full text-gray-600"><Icons.X size={20}/></button>
+                         </div>
+                         <div className="flex-1 overflow-y-auto space-y-4">
+                            {players.map(p => {
+                               const isTurn = !winner && currentTurnPlayer?.id === p.id;
+                               const isMe = p.id === me.id;
+                               return (
+                                  <button key={p.id} onClick={()=>{ if(!isMe){setSpectatingId(p.id);setShowPlayerList(false);} else {setSpectatingId(null);setShowPlayerList(false);} }} className={`w-full flex items-center gap-4 p-3 rounded-2xl transition-all ${isTurn ? 'bg-lavender-50 border-2 border-lavender-400' : 'hover:bg-gray-50'}`}>
+                                     <div className={`w-12 h-12 rounded-full shadow-clay-avatar ${AVATAR_STYLES[p.avatar_idx]} flex items-center justify-center relative`}>
+                                        <span className="text-white font-bold text-lg drop-shadow-md">{p.name[0].toUpperCase()}</span>
+                                        {isTurn && <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>}
+                                     </div>
+                                     <div className="text-left flex-1">
+                                        <p className={`font-bold ${isMe?'text-lavender-700':'text-gray-800'}`}>{p.name} {isMe&&"(You)"}</p>
+                                        <p className="text-xs text-gray-500">{p.guesses?.length||0} guesses</p>
+                                     </div>
+                                     {!isMe && <Icons.Eye size={16} className="text-gray-300"/>}
+                                  </button>
+                               );
+                            })}
+                         </div>
+                      </div>
+                   </div>
+                )}
+             </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
