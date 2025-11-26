@@ -23,6 +23,20 @@
               'clay-btn': '6px 6px 12px #d1cbf8, -6px -6px 12px #ffffff',
               'clay-btn-active': 'inset 4px 4px 8px #d1cbf8, inset -4px -4px 8px #ffffff',
               'clay-avatar': 'inset -3px -3px 6px rgba(0,0,0,0.1), inset 3px 3px 6px rgba(255,255,255,0.7)',
+            },
+            animation: {
+              fadeIn: 'fadeIn 0.3s ease-out',
+              slideInRight: 'slideInRight 0.3s ease-out',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              slideInRight: {
+                '0%': { transform: 'translateX(100%)' },
+                '100%': { transform: 'translateX(0)' },
+              }
             }
           },
         },
@@ -43,19 +57,6 @@
     
     <!-- 4. Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.86.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "vite": "https://aistudiocdn.com/vite@^7.2.4",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
-  }
-}
-</script>
 </head>
 <body>
     <div id="root"></div>
@@ -98,7 +99,7 @@
         ];
         
         // --- SUPABASE SETUP ---
-        const SUPABASE_URL = "https://supabase.com/dashboard/project/xvpvsaovshendeszifnq";
+        const SUPABASE_URL = "https://xvpvsaovshendeszifnq.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2cHZzYW92c2hlbmRlc3ppZm5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNzgzMTcsImV4cCI6MjA3OTc1NDMxN30.Y8TtfIB_6jmWfmE1agcKyQFjkFlBl10JTzTTHMiSqnQ";
         
         let supabase = null;
