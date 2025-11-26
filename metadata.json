@@ -1,0 +1,5 @@
+{
+  "name": "Lavender Logic",
+  "description": "A multiplayer deductive reasoning game where you guess a 4-digit code. Features single-player and real-time multiplayer rooms.",
+  "requestFramePermissions": []
+}
